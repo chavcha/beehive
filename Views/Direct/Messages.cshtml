@@ -3,14 +3,14 @@
 @{
     Layout = null;
 }
-@model ChatMessagePageModel
+@model DirectMessagePageModel
 
 <!DOCTYPE html>
 <html lang="ru" class="scroll-smooth">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Beehive | @Model.Chat.Title</title>
+    <title>Beehive | @Model.Companion.Name</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -37,25 +37,66 @@
         }
 
         .message-self {
-            apply bg-yellow-100 dark:bg-yellow-900 rounded-l-lg rounded-tr-lg ml-auto;
+            border: 2px solid #fbbf24; /* Желтая рамка для своих сообщений */
+            border-radius: 0.75rem;
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.75rem;
+            max-width: 80%;
+            margin-left: auto;
+            word-wrap: break-word;
+            background-color: #fef3c7; /* Светло-оранжевый фон */
+            color: #1f2937; /* Темный текст */
         }
 
         .message-other {
-            apply bg-gray-100 dark:bg-gray-800 rounded-r-lg rounded-tl-lg mr-auto;
+            border: 2px solid #60a5fa; /* Синяя рамка для сообщений собеседника */
+            border-radius: 0.75rem;
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.75rem;
+            max-width: 80%;
+            margin-right: auto;
+            word-wrap: break-word;
+            background-color: #eff6ff; /* Светло-голубой фон */
+            color: #1f2937; /* Темный текст */
         }
 
-        .message-container {
-            height: calc(100vh - 200px);
+        /* Стили для темной темы */
+        .dark .message-self {
+            border-color: #f59e0b; /* Более яркая желтая рамка */
+            background-color: #92400e; /* Темно-оранжевый фон */
+            color: #f3f4f6; /* Светлый текст */
         }
 
-        .scrollable-column {
-            max-height: 300px;
-            overflow-y: auto;
+        .dark .message-other {
+            border-color: #3b82f6; /* Яркая синяя рамка */
+            background-color: #1e40af; /* Темно-синий фон */
+            color: #f3f4f6; /* Светлый текст */
         }
-    </style>
+
+        .sender-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            color: #fbbf24; /* Желтый цвет для имени в светлой теме */
+        }
+
+        .dark .sender-name {
+            color: #fcd34d; /* Более светлый желтый в темной теме */
+        }
+
+        .msg-datetime {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+            text-align: right;
+        }
+
+        .dark .msg-datetime {
+            color: #9ca3af; /* Светло-серый в темной теме */
+        }
+        }</style>
 </head>
 <body class="light-theme min-h-screen bg-cover bg-center bg-no-repeat">
-
+    <div hidden id="user-id">@Model.Companion.Id</div>
     <!-- Верхнее меню -->
     <nav class="w-full backdrop-blur-md bg-white/95 dark:bg-neutral-900/95 shadow-md sticky top-0 z-20 border-b border-gray-200 dark:border-neutral-700 transition-colors duration-300">
         <div class="max-w-6xl mx-auto px-6 flex items-center justify-between h-16">
@@ -79,7 +120,7 @@
 
                 </ul>
 
-                <h1 class="text-xl font-semibold text-gray-700 dark:text-gray-300">@Model.Chat.Title</h1>
+                <h1 class="text-xl font-semibold text-gray-700 dark:text-gray-300">@Model.Companion.Name</h1>
             </div>
             <div class="flex items-center gap-4">
                 <button id="theme-toggle" class="relative p-2 text-gray-700 dark:text-yellow-300 hover:text-gray-900 dark:hover:text-yellow-400 transition-colors duration-300">
@@ -91,7 +132,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
                     </svg>
                 </button>
-                <a href="/Chat/Index" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-1 rounded-lg shadow transition">
+                <a href="/Direct/Search" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-1 rounded-lg shadow transition">
                     Назад
                 </a>
             </div>
@@ -187,23 +228,17 @@
                 </div>
 
                 <div class="space-y-4">
-                    <h2 class="text-xl font-bold text-gray-800 dark:text-gray-200">@Model.Chat.Title</h2>
+                    <h2 class="text-xl font-bold text-gray-800 dark:text-gray-200">@Model.Companion.Name</h2>
 
-                    @if (!string.IsNullOrEmpty(Model.Chat.ShortDescription))
+                    @if (!string.IsNullOrEmpty(Model.Companion.Status))
                     {
                         <div>
                             <h3 class="text-sm font-semibold text-gray-600 dark:text-gray-400">Краткое описание</h3>
-                            <p class="text-gray-800 dark:text-gray-200">@Model.Chat.ShortDescription</p>
+                            <p class="text-gray-800 dark:text-gray-200">@Model.Companion.Status</p>
                         </div>
                     }
 
-                    @if (!string.IsNullOrEmpty(Model.Chat.LongDescription))
-                    {
-                        <div>
-                            <h3 class="text-sm font-semibold text-gray-600 dark:text-gray-400">Описание</h3>
-                            <p class="text-gray-800 dark:text-gray-200">@Model.Chat.LongDescription</p>
-                        </div>
-                    }
+                    
                 </div>
 
                 <div class="border-t border-gray-200 dark:border-neutral-700 pt-4">
@@ -222,57 +257,56 @@
     <!-- Подключение SignalR -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
     <script>
-        // Инициализация соединения
-        const connection = new signalR.HubConnectionBuilder()
-            .withUrl("/chatHub")
-            .configureLogging(signalR.LogLevel.Information)
+                "use strict"
+
+        const hub = new signalR.HubConnectionBuilder()
+            .withUrl("/dmhub")
             .build();
+        hub.start();
 
-        // Обработчик нового сообщения
-        connection.on("ReceiveMessage", (senderId, encryptedMessage, sentAt, chatId) => {
-            if (chatId === "@Model.Chat.Id") {
-                // Логика обработки нового сообщения
-                const msgList = document.getElementById("msg-list");
-                // ... декодирование и добавление сообщения
+        hub.on("Receive", (msg, dt) => getMsg(msg, dt, false));
+
+        hub.on("ReceiveSelf", (msg, dt) => getMsg(msg, dt, true));
+
+        function getMsg(text, dtv, isSelf) {
+            var flex = document.createElement("div");
+            var e = document.createElement("div");
+            var t = document.createElement("div");
+            var br = document.createElement("br");
+            t.textContent = text;
+            if (isSelf) {
+                flex.className = "flex justify-end";
+                e.className = "message-self";
             }
-        });
+            else
+            {
+                flex.className = "flex justify-start";
+                e.className = "message-other";
+            }
+            e.appendChild(br);
+            e.appendChild(t);
+            var dt = document.createElement("div");
+            dt.className = "text-xs text-gray-500 dark:text-gray-400 mt-1";
+            dt.textContent = dtv;
+            e.appendChild(dt);
+            flex.appendChild(e);
+            document.getElementById("msg-list").appendChild(flex);
+        }
 
-        // Функция отправки сообщения
         function send() {
-            const messageInput = document.getElementById("msg-input");
-            const message = messageInput.value.trim();
+                var id = document.getElementById("user-id").textContent.trim();
+                var text = document.getElementById("msg-input").value;
+                fetch(`/Direct/Send?id=${id}`, {
+                    method: "POST",
+                    body: text
+                })
+                .then(res => res.text())
+                .then(txt => {
+                    hub.invoke("Send", id, text, txt);
+                    document.getElementById("msg-input").value = ""; // Очищаем поле ввода
+                });
+            }   
 
-            if (message === "") return;
-
-            try {
-                connection.invoke("SendMessage",
-                    "@Model.Current.Id",
-                    "@Model.Chat.Id",
-                    message);
-
-                messageInput.value = "";
-            } catch (err) {
-                console.error("Ошибка отправки:", err);
-            }
-        }
-
-        // Запуск соединения
-        async function start() {
-            try {
-                await connection.start();
-                console.log("SignalR подключен");
-                await connection.invoke("JoinChat", "@Model.Chat.Id");
-            } catch (err) {
-                console.log("Ошибка подключения:", err);
-                setTimeout(start, 5000);
-            }
-        }
-
-        connection.onclose(async () => {
-            await start();
-        });
-
-        start();
 
         // Скрипт переключения темы
         document.addEventListener('DOMContentLoaded', function() {

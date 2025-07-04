@@ -1,28 +1,17 @@
-﻿@{
-    ViewData["Title"] = "Групповые чаты";
+﻿@using System.Security.Cryptography
+@using System.Text
+@using Microsoft.IdentityModel.Tokens
+@{
     Layout = null;
 }
+@model ChatMessagePageModel
 
 <!DOCTYPE html>
 <html lang="ru" class="scroll-smooth">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Beehive — @ViewData["Title"]</title>
-    <script>
-        // Проверка темы при загрузке
-        (function() {
-            const savedTheme = localStorage.getItem('theme');
-            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            const html = document.documentElement;
-
-            if (savedTheme === 'dark' || (!savedTheme && systemPrefersDark)) {
-                html.classList.add('dark');
-                document.body.classList.add('dark-theme');
-                document.body.classList.remove('light-theme');
-            }
-        })();
-    </script>
+    <title>Beehive | @Model.Chat.Title</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -48,74 +37,90 @@
             background-image: url('/images/темная тема 1.png');
         }
 
-        body {
-            min-height: 100vh;
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            display: flex;
-            flex-direction: column;
-            transition: background-image 0.5s ease;
+        .message-self {
+            apply bg-yellow-100 dark:bg-yellow-900 rounded-l-lg rounded-tr-lg ml-auto;
         }
 
-        .hive-logo {
-            transition: all 0.3s ease;
+        .message-other {
+            apply bg-gray-100 dark:bg-gray-800 rounded-r-lg rounded-tl-lg mr-auto;
         }
 
-            .hive-logo:hover {
-                transform: scale(1.1);
-            }
-
-        .chat-card {
-            transition: all 0.2s ease;
+        .message-container {
+            height: calc(100vh - 200px);
         }
 
-            .chat-card:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-            }
-
-        .unread-badge {
-            animation: pulse 1.5s infinite;
+        .scrollable-column {
+            max-height: 300px;
+            overflow-y: auto;
         }
 
-        keyframes pulse {
-            0%
-
-        {
-            opacity: 0.6;
+        .msg {
+            border: 2px solid #fbbf24; /* Яркая оранжевая рамка */
+            border-radius: 0.75rem;
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.75rem;
+            max-width: 80%;
+            word-wrap: break-word;
+            background-color: white; /* Белый фон в светлой теме */
+            color: #1f2937; /* Темный текст в светлой теме */
         }
 
-        50% {
-            opacity: 1;
+        .msg-self {
+            border: 2px solid #fbbf24; /* Такая же рамка, но другой фон */
+            border-radius: 0.75rem;
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.75rem;
+            max-width: 80%;
+            margin-left: auto;
+            word-wrap: break-word;
+            background-color: #fef3c7; /* Светло-оранжевый фон для своих сообщений */
+            color: #1f2937; /* Темный текст */
         }
 
-        100% {
-            opacity: 0.6;
+        /* Стили для темной темы */
+        .dark .msg {
+            background-color: #1f2937; /* Темный фон */
+            color: #f3f4f6; /* Светлый текст */
+            border-color: #f59e0b; /* Более яркая рамка в темной теме */
         }
 
+        .dark .msg-self {
+            background-color: #92400e; /* Темно-оранжевый фон для своих сообщений */
+            color: #f3f4f6; /* Светлый текст */
+            border-color: #f59e0b;
         }
 
-        .search-input:focus {
-            outline: none;
-            box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.5);
+        .sender-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            color: #fbbf24;
+        }
+
+        .dark .sender-name {
+            color: #fcd34d; /* Более светлый оттенок в темной теме */
+        }
+
+        .msg-datetime {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+            text-align: right;
+        }
+
+        .dark .msg-datetime {
+            color: #9ca3af; /* Светло-серый в темной теме */
         }
     </style>
-    <link rel="icon" href="/images/hexagons16.ico" type="image/x-icon">
 </head>
-<body class="light-theme">
-
-    <!-- Навигационная панель -->
+<body class="light-theme min-h-screen bg-cover bg-center bg-no-repeat">
+    <div hidden id="chat-id">@Model.Chat.Id</div>
+    <!-- Верхнее меню -->
     <nav class="w-full backdrop-blur-md bg-white/95 dark:bg-neutral-900/95 shadow-md sticky top-0 z-20 border-b border-gray-200 dark:border-neutral-700 transition-colors duration-300">
         <div class="max-w-6xl mx-auto px-6 flex items-center justify-between h-16">
-            <!-- Левый блок (лого + меню) -->
             <div class="flex items-center">
-                <!-- Логотип -->
-                <a href="/Home/Index" class="mr-6 hive-logo" title="На главную">
+                <a href="/Home/Index" class="mr-6" title="На главную">
                     <img src="/images/beehive logo.png" alt="Beehive" class="h-7 w-7 object-contain">
                 </a>
-
-                <!-- Навигационные ссылки -->
                 <ul class="flex space-x-8 font-semibold text-gray-700 dark:text-gray-300 select-none">
                     <li>
                         <a href="/Direct/Search" class="hover:text-yellow-500 transition flex items-center" title="Поиск">
@@ -131,171 +136,192 @@
                     <li><a href="/Home/Profile" class="hover:text-yellow-500 transition">Профиль</a></li>
 
                 </ul>
+
+                <h1 class="text-xl font-semibold text-gray-700 dark:text-gray-300">@Model.Chat.Title</h1>
             </div>
-
-            <!-- Правый блок (кнопки) -->
             <div class="flex items-center gap-4">
-                <!-- Кнопка переключения темы -->
                 <button id="theme-toggle" class="relative p-2 text-gray-700 dark:text-yellow-300 hover:text-gray-900 dark:hover:text-yellow-400 transition-colors duration-300">
-                    <div class="relative h-6 w-6">
-                        <!-- Иконка луны -->
-                        <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 absolute top-0 left-0 opacity-0 dark:opacity-100 transition-opacity duration-300" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-                        </svg>
-
-                        <!-- Иконка солнца -->
-                        <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 absolute top-0 left-0 opacity-100 dark:opacity-0 transition-opacity duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                        </svg>
-                    </div>
+                    <!-- Иконки темы -->
+                    <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 opacity-0 dark:opacity-100 absolute inset-0 m-auto transition-opacity duration-300" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                    </svg>
+                    <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 opacity-100 dark:opacity-0 transition-opacity duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
                 </button>
-
-                <!-- Кнопка выхода -->
-                <form method="post" asp-controller="Home" asp-action="Logout">
-                    <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-4 py-1 rounded-lg shadow transition">
-                        Выйти
-                    </button>
-                </form>
+                <a href="/Chat/Index" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-1 rounded-lg shadow transition">
+                    Назад
+                </a>
             </div>
         </div>
     </nav>
 
-    <!-- Основное содержимое чатов -->
-    <main class="flex-grow container mx-auto px-4 py-6">
-        <div class="max-w-4xl mx-auto">
-            <!-- Заголовок и поиск -->
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-                <h1 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-4 md:mb-0">Групповые чаты</h1>
+    <!-- Основной контент -->
+    <main class="max-w-7xl mx-auto flex h-[calc(100vh-64px)]">
+        <!-- Левая панель - сообщения -->
+        <div class="flex-1 flex flex-col border-r border-gray-200 dark:border-neutral-700">
+            <!-- Поиск -->
+            <div class="p-4 border-b border-gray-200 dark:border-neutral-700">
+                <form method="get" asp-action="SearchMsgs" class="flex gap-2">
+                    <input name="query" type="text" placeholder="Поиск сообщений..."
+                           class="flex-grow px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-yellow-500 text-gray-800 dark:text-gray-100">
+                    <button type="submit" class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg transition">
+                        Найти
+                    </button>
+                </form>
+            </div>
 
-                <div class="relative w-full md:w-64">
-                    <input type="text" placeholder="Поиск чатов..."
-                           class="search-input w-full pl-10 pr-4 py-2 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:outline-none transition">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 absolute left-3 top-2.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
+            <!-- Сообщения -->
+            <div id="msg-list" class="flex-1 overflow-y-auto p-4 space-y-4">
+                
+                    <div hidden id="chat-id">
+                        @Model.Chat.Id
+                    </div>
+                    
+                    <div class="main-space">
+                        <div style="{overflow-y: scroll}" class="msg-scroller main-space" id="msg-list">
+                            @{
+                                var rsaSelf = RSA.Create();
+                                rsaSelf.ImportEncryptedPkcs8PrivateKey(GlobalVals.ReadPassKey(Model.Current.Id),
+                                Model.Current.EncryptedPrivateKey, out var _);
+                                var rsaOthers = new Dictionary<Guid, RSA>();
+                                RSA pointer;
+                                //string cl;
+                                foreach (var msg in Model.Messages)
+                                {
+                                    <br />
+                                    if (msg.Sender.Id == @Model.Current.Id)
+                                        pointer = rsaSelf;
+                                    else
+                                    {
+                                        if (!rsaOthers.ContainsKey(msg.Sender.Id))
+                                        {
+                                            rsaOthers.Add(msg.Sender.Id, RSA.Create());
+                                            rsaOthers[msg.Sender.Id].ImportEncryptedPkcs8PrivateKey(GlobalVals.ReadPassKey(msg.Sender.Id),
+                                            msg.Sender.EncryptedPrivateKey, out var _);
+                                        }
+                                        pointer = rsaOthers[msg.Sender.Id];
+                                    }
+                                    // cl = msg.Sender.Id == @Model.CurrentId.Id ? "msg-self" : "msg";
+
+                                    <div class="msg">
+                                        <div class="sender-name">
+                                            @msg.Sender.Name
+                                        </div>
+                                        <div>
+                                            @Encoding.Unicode.GetString(pointer.Decrypt(msg.Text, RSAEncryptionPadding.OaepSHA256))
+                                        </div>
+                                        <div class="msg-datetime">
+                                            @msg.SentAt.ToShortTimeString()
+                                        </div>
+                                    </div>
+                                }
+                            }
+                        </div>
+                    </div>
+                
+            </div>
+
+            <!-- Форма отправки -->
+            <div class="p-4 border-t border-gray-200 dark:border-neutral-700">
+                <div class="flex gap-2">
+                    <textarea id="msg-input" asp-for="MessageText"
+                              class="flex-grow px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-yellow-500 text-gray-800 dark:text-gray-100"
+                              placeholder="Напишите сообщение..."></textarea>
+                    <button onclick="send()" class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg transition">
+                        Отправить
+                    </button>
                 </div>
-            </div>
-
-            <!-- Фильтры чатов -->
-            <div class="flex flex-wrap gap-2 mb-6">
-                <button class="px-4 py-2 bg-yellow-500 text-white rounded-full text-sm font-medium">
-                    Все чаты
-                </button>
-                <button class="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-full text-sm transition">
-                    Новые
-                </button>
-                <button class="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-full text-sm transition">
-                    Непрочитанные
-                </button>
-                <button class="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-full text-sm transition">
-                    Администрируемые
-                </button>
-            </div>
-
-            <!-- Список чатов -->
-            <div class="space-y-3">
-                <!-- Чат 1 -->
-                <a href="/Chat/Group/chat1" class="block">
-                    <div class="chat-card backdrop-blur-md bg-white/95 dark:bg-neutral-900/95 rounded-xl shadow p-4 border border-gray-200 dark:border-neutral-700 flex items-center">
-                        <div class="relative mr-4">
-                            <img src="/images/group1.jpg" class="w-12 h-12 rounded-full object-cover">
-                            <div class="absolute bottom-0 right-0 bg-green-500 w-3 h-3 rounded-full border-2 border-white dark:border-gray-900"></div>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <h3 class="font-semibold text-gray-900 dark:text-white truncate">Пчеловоды Москвы</h3>
-                            <p class="text-gray-500 dark:text-gray-400 text-sm truncate">Алексей: Привет! Как дела на пасеке? У меня сегодня...</p>
-                        </div>
-                        <div class="text-right ml-4">
-                            <p class="text-xs text-gray-500 dark:text-gray-400">12:45</p>
-                            <span class="inline-block bg-yellow-500 text-white text-xs px-1.5 py-0.5 rounded-full unread-badge">3</span>
-                        </div>
-                    </div>
-                </a>
-
-                <!-- Чат 2 -->
-                <a href="/Chat/Group/2" class="block">
-                    <div class="chat-card backdrop-blur-md bg-white/95 dark:bg-neutral-900/95 rounded-xl shadow p-4 border border-gray-200 dark:border-neutral-700 flex items-center">
-                        <div class="relative mr-4">
-                            <img src="/images/group2.jpg" class="w-12 h-12 rounded-full object-cover">
-                            <div class="absolute bottom-0 right-0 bg-green-500 w-3 h-3 rounded-full border-2 border-white dark:border-gray-900"></div>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <h3 class="font-semibold text-gray-900 dark:text-white truncate">Продажа меда</h3>
-                            <p class="text-gray-500 dark:text-gray-400 text-sm truncate">Мария: Выставила новый мед на продажу, кто хочет...</p>
-                        </div>
-                        <div class="text-right ml-4">
-                            <p class="text-xs text-gray-500 dark:text-gray-400">10:30</p>
-                            <span class="inline-block bg-yellow-500 text-white text-xs px-1.5 py-0.5 rounded-full unread-badge">5</span>
-                        </div>
-                    </div>
-                </a>
-
-                <!-- Чат 3 -->
-                <a href="/Chat/Group/3" class="block">
-                    <div class="chat-card backdrop-blur-md bg-white/95 dark:bg-neutral-900/95 rounded-xl shadow p-4 border border-gray-200 dark:border-neutral-700 flex items-center">
-                        <div class="relative mr-4">
-                            <img src="/images/group3.jpg" class="w-12 h-12 rounded-full object-cover">
-                            <div class="absolute bottom-0 right-0 bg-gray-500 w-3 h-3 rounded-full border-2 border-white dark:border-gray-900"></div>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <h3 class="font-semibold text-gray-900 dark:text-white truncate">Обучение пчеловодству</h3>
-                            <p class="text-gray-500 dark:text-gray-400 text-sm truncate">Дмитрий: Напоминаю, завтра в 10:00 вебинар по уходу...</p>
-                        </div>
-                        <div class="text-right ml-4">
-                            <p class="text-xs text-gray-500 dark:text-gray-400">Вчера</p>
-                        </div>
-                    </div>
-                </a>
-
-                <!-- Чат 4 -->
-                <a href="/Chat/Group/4" class="block">
-                    <div class="chat-card backdrop-blur-md bg-white/95 dark:bg-neutral-900/95 rounded-xl shadow p-4 border border-gray-200 dark:border-neutral-700 flex items-center">
-                        <div class="relative mr-4">
-                            <img src="/images/group4.jpg" class="w-12 h-12 rounded-full object-cover">
-                            <div class="absolute bottom-0 right-0 bg-green-500 w-3 h-3 rounded-full border-2 border-white dark:border-gray-900"></div>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <h3 class="font-semibold text-gray-900 dark:text-white truncate">Оборудование для пасеки</h3>
-                            <p class="text-gray-500 dark:text-gray-400 text-sm truncate">Сергей: Привезли новые ульи, цена 2500 за штуку...</p>
-                        </div>
-                        <div class="text-right ml-4">
-                            <p class="text-xs text-gray-500 dark:text-gray-400">Пн</p>
-                            <span class="inline-block bg-yellow-500 text-white text-xs px-1.5 py-0.5 rounded-full unread-badge">1</span>
-                        </div>
-                    </div>
-                </a>
-
-                <!-- Чат 5 -->
-                <a href="/Chat/Group/5" class="block">
-                    <div class="chat-card backdrop-blur-md bg-white/95 dark:bg-neutral-900/95 rounded-xl shadow p-4 border border-gray-200 dark:border-neutral-700 flex items-center">
-                        <div class="relative mr-4">
-                            <img src="/images/group5.jpg" class="w-12 h-12 rounded-full object-cover">
-                            <div class="absolute bottom-0 right-0 bg-gray-500 w-3 h-3 rounded-full border-2 border-white dark:border-gray-900"></div>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <h3 class="font-semibold text-gray-900 dark:text-white truncate">Выставка меда 2023</h3>
-                            <p class="text-gray-500 dark:text-gray-400 text-sm truncate">Ольга: Напоминаю про подготовку к выставке...</p>
-                        </div>
-                        <div class="text-right ml-4">
-                            <p class="text-xs text-gray-500 dark:text-gray-400">23.05</p>
-                        </div>
-                    </div>
-                </a>
+                <div class="mt-2 flex justify-end">
+                    <button class="text-sm text-yellow-500 hover:text-yellow-600 transition">
+                        Прикрепить файл
+                    </button>
+                </div>
             </div>
         </div>
 
-        <!-- Кнопка создания нового чата -->
-        <div class="fixed bottom-6 right-6">
-            <a href="/Chat/NewGroup" class="bg-yellow-500 hover:bg-yellow-600 text-white p-4 rounded-full shadow-lg flex items-center justify-center transition">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-            </a>
+        <!-- Правая панель - информация о чате -->
+        <div class="w-80 hidden md:block p-4 backdrop-blur-md bg-white/90 dark:bg-neutral-900/90">
+            <div class="sticky top-4 space-y-6">
+                <div class="flex justify-end">
+                    <button class="p-2 text-gray-500 hover:text-yellow-500 transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="space-y-4">
+                    <h2 class="text-xl font-bold text-gray-800 dark:text-gray-200">@Model.Chat.Title</h2>
+
+                    @if (!string.IsNullOrEmpty(Model.Chat.ShortDescription))
+                    {
+                        <div>
+                            <h3 class="text-sm font-semibold text-gray-600 dark:text-gray-400">Краткое описание</h3>
+                            <p class="text-gray-800 dark:text-gray-200">@Model.Chat.ShortDescription</p>
+                        </div>
+                    }
+                </div>
+
+                <div class="border-t border-gray-200 dark:border-neutral-700 pt-4">
+                    <h3 class="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2">Участники</h3>
+                    <div class="space-y-2">
+                        <!-- TODO: Список участников -->
+                        <div class="text-center py-4 text-gray-500 dark:text-gray-400">
+                            Список участников будет здесь
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </main>
 
-    <!-- Скрипт переключения темы -->
+    <!-- Подключение SignalR -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
     <script>
+        // Инициализация соединения
+        "use strict"
+
+        const hub = new signalR.HubConnectionBuilder()
+            .withUrl("/chathub")
+            .build();
+        hub.start();
+
+        hub.on("Receive", (msg, dt) => getMsg(msg, dt, false));
+
+        hub.on("ReceiveSelf", (msg, dt) => getMsg(msg, dt, true));
+
+        function getMsg(text, dtv, isSelf) {
+            var e = document.createElement("div");
+            var t = document.createElement("div");
+            var br = document.createElement("br");
+            t.textContent = text;
+            if (isSelf) e.className = "msg-self";
+            else e.className = "msg";
+            e.appendChild(br);
+            e.appendChild(t);
+            var dt = document.createElement("div");
+            dt.className = "msg-datetime";
+            dt.textContent = dtv;
+            e.appendChild(dt);
+            document.getElementById("msg-list").appendChild(e);
+        }
+
+        function send() {
+            var id = document.getElementById("chat-id").textContent.trim();
+            var text = document.getElementById("msg-input").value;
+            fetch(`/Chat/Send?id=${id}`, {
+                method: "POST",
+                body: text
+            })
+                .then(res => res.text())
+                .then(txt => {
+                    hub.invoke("Send", id, text, txt);
+                    document.getElementById("msg-input").value = ""; // Очищаем поле ввода после отправки
+                });
+        }
+
+        // Скрипт переключения темы
         document.addEventListener('DOMContentLoaded', function() {
             const themeToggle = document.getElementById('theme-toggle');
             const moonIcon = document.getElementById('moon-icon');
@@ -323,7 +349,6 @@
                 }
             }
 
-            // Проверка сохраненной темы
             const savedTheme = localStorage.getItem('theme');
             const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
@@ -331,26 +356,10 @@
                 setTheme(true);
             }
 
-            // Обработчик переключения темы
-            themeToggle.addEventListener('click', function() {
+            themeToggle.addEventListener('click', () => {
                 const isDark = !html.classList.contains('dark');
                 localStorage.setItem('theme', isDark ? 'dark' : 'light');
                 setTheme(isDark);
-            });
-
-            // Обработчик поиска
-            const searchInput = document.querySelector('.search-input');
-            searchInput.addEventListener('input', function() {
-                const searchTerm = this.value.toLowerCase();
-                document.querySelectorAll('.chat-card').forEach(chat => {
-                    const title = chat.querySelector('h3').textContent.toLowerCase();
-                    const preview = chat.querySelector('p').textContent.toLowerCase();
-                    if (title.includes(searchTerm) || preview.includes(searchTerm)) {
-                        chat.parentElement.style.display = 'block';
-                    } else {
-                        chat.parentElement.style.display = 'none';
-                    }
-                });
             });
         });
     </script>

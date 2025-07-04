@@ -13,7 +13,7 @@
 
         public OldPrivateMessageLoader ArchiveLoader => archiveLoader;
 
-        public List<Message> Messages => [.. EnumerationModel];
+        public List<Message> Messages => EnumerationModel.ToList();
 
         public readonly IEnumerable<Message> EnumerationModel = loader.Concat(archiveLoader);
     }

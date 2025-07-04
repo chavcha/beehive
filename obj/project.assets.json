@@ -8550,23 +8550,23 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\danii\\.nuget\\packages\\": {},
-    "D:\\Apps\\VS\\Comps\\NuGetPackages": {}
+    "C:\\Users\\1\\.nuget\\packages\\": {},
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\beehive-main3\\Beehive.csproj",
+      "projectUniqueName": "C:\\Users\\1\\source\\repos\\beehive-main3\\Beehive.csproj",
       "projectName": "Beehive",
-      "projectPath": "D:\\beehive-main3\\Beehive.csproj",
-      "packagesPath": "C:\\Users\\danii\\.nuget\\packages\\",
-      "outputPath": "D:\\beehive-main3\\obj\\",
+      "projectPath": "C:\\Users\\1\\source\\repos\\beehive-main3\\Beehive.csproj",
+      "packagesPath": "C:\\Users\\1\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\1\\source\\repos\\beehive-main3\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
-        "D:\\Apps\\VS\\Comps\\NuGetPackages"
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\danii\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\1\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],

@@ -74,8 +74,7 @@ namespace Beehive.Controllers
             db.ChatModRecs.Add(adminRec);
             db.SaveChanges();
             hub.Groups.AddToGroupAsync(CurrentId, chat.Id.ToString());
-            return View("Messages", new ChatMessagePageModel(Current, new Chat(chat), new ChatMessageLoader(db.ChatMessages, chat.Id),
-                new OldChatMessageLoader(db.OldChatMessages, chat.Id)));
+            return RedirectToAction("Chat", new { id = chat.Id });
         }
 
         [Authorize]
@@ -115,7 +114,7 @@ namespace Beehive.Controllers
 
         [HttpPost]
         [Authorize]
-        public async Task<IActionResult> Send(Guid id, FileRecord[] files)
+        public async Task<IActionResult> Send(Guid id, FileRecord[]? files = null)
         {
             string text;
             using (var s = new StreamReader(HttpContext.Request.Body)) 
@@ -146,17 +145,18 @@ namespace Beehive.Controllers
             };
             db.ChatMessages.Add(rec);
 
-            foreach (var f in files)
-            {
-                var mfr = new MessageFileRecord
+            if (files is not null)
+                foreach (var f in files)
                 {
-                    MessageId = rec.Id,
-                    FileId = f.Id
-                };
-                f.UseCount++;
-                db.Entry(f).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
-                db.Add(mfr);
-            }
+                    var mfr = new MessageFileRecord
+                    {
+                        MessageId = rec.Id,
+                        FileId = f.Id
+                    };
+                    f.UseCount++;
+                    db.Entry(f).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
+                    db.Add(mfr);
+                }
 
             db.SaveChanges();
             return Ok(dt.ToShortTimeString());

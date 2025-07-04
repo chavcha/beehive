@@ -13,7 +13,7 @@ namespace Beehive.Models
 
         public IEnumerator<Message> GetEnumerator()
         {
-            return Set.Where(e => e.Chat.Id == ChatId)
+            return Set.Where(e => e.ChatId == ChatId)
                       .OrderBy(e => e.SentAt)
                       .Include(e => e.Chat)
                       .Include(e => e.SentBy)
